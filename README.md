@@ -11,7 +11,7 @@
 
 ## Current state
 
-The current implementation is well tested but far from being stable.
+The current implementation is well tested but far from being final.
 Several future changes will be implemented until the first stable version 1.0:
 
  - [ ] Add documentation to all public structures and methods
@@ -19,6 +19,8 @@ Several future changes will be implemented until the first stable version 1.0:
  - [ ] Add missing methods like insertion of children (in addition to just pushing)
  - [ ] Reevaluate the mutability of all methods
  - [ ] Add concise documentation how to use ***dltree*** in README.md
+
+So please keep in mind that the interface and behaviour may change over time until version 1.0.
 
 ## Donation
 
