@@ -3,13 +3,13 @@
 [![Actions Status](https://github.com/VilNeo/dltree/workflows/Test/badge.svg)](https://github.com/VilNeo/dltree/actions)
 [![grcov](https://img.shields.io/codecov/c/github/VilNeo/dltree)](https://app.codecov.io/gh/VilNeo/dltree)
 
-#dltree
+# dltree
 
-##About
+## About
 
 ***dltree* is a library that provides a double linked tree with leaf-considering typing.**
 
-##Current state
+## Current state
 
 The current implementation is well tested but far from being stable.
 Several future changes will be implemented until the first stable version 1.0:
@@ -20,7 +20,7 @@ Several future changes will be implemented until the first stable version 1.0:
  - [ ] Reevaluate the mutability of all methods
  - [ ] Add concise documentation how to use ***dltree*** in README.md
 
-##Donation
+## Donation
 
 ***dltree*** is a purely private project and does not follow any commercial interests.
 If you still want to support my work, you are welcome to do so with a small donation:
