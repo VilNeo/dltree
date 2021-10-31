@@ -89,4 +89,21 @@ mod tests {
             assert_eq!(n.children().len(), 0);
         }
     }
+
+    #[test]
+    fn tree_element_test() {
+        let tree = Tree::new(Value::Node(23));
+        assert!(tree.root_node().parent().is_none());
+        let mut node = tree.root_node().as_node().unwrap();
+        let sub_tree = node.push_child(Value::Node(34));
+        assert!(sub_tree.parent().is_some());
+        let sub_sub_tree = sub_tree.as_node().unwrap().push_child(Value::Leaf(45));
+        assert!(sub_sub_tree.parent().is_some());
+        assert_eq!(sub_tree.as_node().unwrap().children().len(), 1);
+        sub_sub_tree.remove_from_tree();
+        assert_eq!(sub_tree.as_node().unwrap().children().len(), 0);
+        assert_eq!(tree.root_node().as_node().unwrap().children().len(), 1);
+        sub_tree.remove_from_tree();
+        assert_eq!(tree.root_node().as_node().unwrap().children().len(), 0);
+    }
 }
