@@ -1,8 +1,12 @@
 [package]
 name = "dltree"
 version = "0.1.0"
+authors = ["Alexander Huymayer"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Double linked tree with leaf-considering typing"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/VilNeo/dltree"
+keywords = ["tree", "data structure", "double linked"]
 
 [dependencies]
