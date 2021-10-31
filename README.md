@@ -29,7 +29,7 @@ ___
 You can make donations via IOTA anonymously, instantly and without any fees:
 
 <p style="text-align: center;">
-<img src="file://resources/donation_address_iota.svg" alt="alt text" width="200" height="200">
+<img src="resources/donation_address_iota.svg" width="200" height="200">
 
 [`iota1qpmzj0hwmykcxwj9s80e5u7tpeuwpzh9ta8q5k5fj754wsxfq0afu8hrzax`](https://explorer.iota.org/mainnet/addr/iota1qpmzj0hwmykcxwj9s80e5u7tpeuwpzh9ta8q5k5fj754wsxfq0afu8hrzax)
 
