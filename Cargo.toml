@@ -7,6 +7,6 @@ description = "Double linked tree with leaf-considering typing"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/VilNeo/dltree"
-keywords = ["tree", "data structure", "double linked"]
+keywords = ["tree", "data-structure", "double-linked"]
 
 [dependencies]
