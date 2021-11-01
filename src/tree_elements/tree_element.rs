@@ -1,6 +1,6 @@
 use super::{leaf::Leaf, node::Node};
 use crate::internal::tree_element_impl::TreeElementImpl;
-use crate::tree::Tree;
+use crate::tree::{DLTreeError, Tree};
 use std::cell::{Ref, RefMut};
 
 pub enum TreeElement<IT, LT> {
@@ -27,13 +27,13 @@ impl<IT, LT> TreeElement<IT, LT> {
             TreeElement::Leaf(l) => Some(l.clone()),
         }
     }
-    pub fn parent(&self) -> Option<Node<IT, LT>> {
-        match &self {
+    pub fn parent(&self) -> Result<Option<Node<IT, LT>>, DLTreeError> {
+        match self {
             TreeElement::Node(n) => n.parent(),
             TreeElement::Leaf(l) => l.parent(),
         }
     }
-    pub fn remove_from_tree(self) -> Tree<IT, LT> {
+    pub fn remove_from_tree(&mut self) -> Result<Tree<IT, LT>, DLTreeError> {
         match self {
             TreeElement::Node(n) => n.remove_from_tree(),
             TreeElement::Leaf(l) => l.remove_from_tree(),

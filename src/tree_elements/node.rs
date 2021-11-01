@@ -1,7 +1,7 @@
 use super::tree_element::TreeElement;
 use crate::internal::node_impl::NodeImpl;
 use crate::internal::tree_element_impl::TreeElementImpl;
-use crate::tree::{Tree, Value};
+use crate::tree::{DLTreeError, Tree, Value};
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
 
@@ -53,33 +53,35 @@ impl<IT, LT> Node<IT, LT> {
             .collect()
     }
 
-    pub fn remove_from_tree(self) -> Tree<IT, LT> {
-        let parent = self.node.borrow_mut().parent.take();
-        match &parent {
+    pub fn remove_from_tree(&mut self) -> Result<Tree<IT, LT>, DLTreeError> {
+        let parent_node = match &self.node.borrow_mut().parent {
             None => {
-                // The node has no parent already. Nothing to do here
+                return Ok(Tree {
+                    tree: TreeElementImpl::Node(self.node.clone()),
+                })
             }
-            Some(p) => {
-                match p.upgrade() {
-                    None => {}
-                    Some(up) => {
-                        up.borrow_mut().children.retain(|c| match c {
-                            TreeElementImpl::Node(n) => !Rc::ptr_eq(n, &self.node),
-                            TreeElementImpl::Leaf(_) => true, // Removing node so nothing to do here
-                        })
-                    }
-                }
-            }
-        }
-        Tree {
-            tree: TreeElementImpl::Node(self.node),
-        }
+            Some(p) => match p.upgrade() {
+                None => return Err(DLTreeError::ParentAlreadyInUse),
+                Some(upgraded_p) => upgraded_p,
+            },
+        };
+        parent_node.borrow_mut().children.retain(|c| match c {
+            TreeElementImpl::Node(n) => !Rc::ptr_eq(n, &self.node),
+            TreeElementImpl::Leaf(_) => true, // Removing node so nothing to do here
+        });
+        self.node.borrow_mut().parent = None;
+        Ok(Tree {
+            tree: TreeElementImpl::Node(self.node.clone()),
+        })
     }
 
-    pub fn parent(&self) -> Option<Node<IT, LT>> {
+    pub fn parent(&self) -> Result<Option<Node<IT, LT>>, DLTreeError> {
         match &self.node.borrow().parent {
-            None => None,
-            Some(p) => Some(Node::new(p.upgrade().unwrap())),
+            None => Ok(None),
+            Some(p) => match p.upgrade() {
+                None => Err(DLTreeError::ParentAlreadyInUse),
+                Some(upgraded_p) => Ok(Some(Node::new(upgraded_p))),
+            },
         }
     }
 }

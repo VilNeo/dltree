@@ -15,7 +15,7 @@ The current implementation is well tested but far from being final.
 Several future changes will be implemented until the first stable version 1.0:
 
  - [ ] Add documentation to all public structures and methods
- - [ ] Remove all panicking elements and return Result<T,E> instead
+ - [x] Remove all panicking elements and return Result<T,E> instead
  - [ ] Add missing methods like insertion of children (in addition to just pushing)
  - [ ] Reevaluate the mutability of all methods
  - [ ] Add concise documentation how to use ***dltree*** in README.md

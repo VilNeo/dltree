@@ -1,6 +1,12 @@
 use crate::internal::tree_element_impl::TreeElementImpl;
 use crate::tree_elements::tree_element::TreeElement;
 
+#[derive(Debug)]
+pub enum DLTreeError {
+    ParentAlreadyInUse,
+    Other(String),
+}
+
 pub enum Value<IT, LT> {
     Node(IT),
     Leaf(LT),
@@ -23,7 +29,7 @@ impl<IT, LT> Tree<IT, LT> {
 
 #[cfg(test)]
 mod tests {
-    use crate::tree::{Tree, Value};
+    use crate::tree::{DLTreeError, Tree, Value};
     use std::borrow::BorrowMut;
 
     #[test]
@@ -53,59 +59,61 @@ mod tests {
     }
 
     #[test]
-    fn element_rempval_test() {
+    fn element_rempval_test() -> Result<(), DLTreeError> {
         let tree = Tree::new(Value::Node(11));
         let mut node11 = tree.root_node().as_node().unwrap();
         let mut node21 = node11.push_child(Value::Node(21)).as_node().unwrap();
-        assert_eq!(node11, node21.parent().unwrap());
+        assert_eq!(node11, node21.parent()?.unwrap());
         let mut _node31 = node21.push_child(Value::Node(31)).as_node().unwrap();
         let mut node32 = node21.push_child(Value::Node(32)).as_node().unwrap();
         let mut _node33 = node21.push_child(Value::Node(33)).as_node().unwrap();
-        let leaf34 = node21.push_child(Value::Leaf(34)).as_leaf().unwrap();
-        let leaf_41 = node32.push_child(Value::Leaf(41)).as_leaf().unwrap();
-        assert_eq!(leaf_41.parent().unwrap(), node32);
+        let mut leaf34 = node21.push_child(Value::Leaf(34)).as_leaf().unwrap();
+        let mut leaf_41 = node32.push_child(Value::Leaf(41)).as_leaf().unwrap();
+        assert_eq!(leaf_41.parent()?.unwrap(), node32);
 
-        let removed_node_32 = node32.remove_from_tree();
+        let removed_node_32 = node32.remove_from_tree()?;
         {
             let n = removed_node_32.root_node().as_node().unwrap();
             assert_eq!(*n.value(), 32);
             assert_eq!(n.children().len(), 1);
-            assert!(n.parent().is_none());
+            assert!(n.parent()?.is_none());
         }
 
-        let _removed_leaf_34 = leaf34.remove_from_tree();
+        let _removed_leaf_34 = leaf34.remove_from_tree()?;
 
         assert_eq!(node21.children().len(), 2);
         assert_eq!(*node21.children().get(0).unwrap().value(), 31);
         assert_eq!(*node21.children().get(1).unwrap().value(), 33);
 
         {
-            let l = leaf_41.remove_from_tree().root_node().as_leaf().unwrap();
+            let l = leaf_41.remove_from_tree()?.root_node().as_leaf().unwrap();
             assert_eq!(*l.value(), 41);
-            assert!(l.parent().is_none());
+            assert!(l.parent()?.is_none());
         }
         {
             let n = removed_node_32.root_node().as_node().unwrap();
             assert_eq!(n.children().len(), 0);
         }
+        Ok(())
     }
 
     #[test]
-    fn tree_element_test() {
+    fn tree_element_test() -> Result<(), DLTreeError> {
         let tree = Tree::new(Value::Node(23));
-        assert!(tree.root_node().parent().is_none());
+        assert!(tree.root_node().parent()?.is_none());
         let mut node = tree.root_node().as_node().unwrap();
-        let sub_tree = node.push_child(Value::Node(34));
-        assert!(sub_tree.parent().is_some());
-        let sub_sub_tree = sub_tree.as_node().unwrap().push_child(Value::Leaf(45));
-        assert!(sub_sub_tree.parent().is_some());
+        let mut sub_tree = node.push_child(Value::Node(34));
+        assert!(sub_tree.parent()?.is_some());
+        let mut sub_sub_tree = sub_tree.as_node().unwrap().push_child(Value::Leaf(45));
+        assert!(sub_sub_tree.parent()?.is_some());
         assert_eq!(sub_tree.as_node().unwrap().children().len(), 1);
-        let removed_sub_sub_tree = sub_sub_tree.remove_from_tree();
-        removed_sub_sub_tree.root_node().remove_from_tree();
+        let removed_sub_sub_tree = sub_sub_tree.remove_from_tree()?;
+        removed_sub_sub_tree.root_node().remove_from_tree()?;
         assert_eq!(sub_tree.as_node().unwrap().children().len(), 0);
         assert_eq!(tree.root_node().as_node().unwrap().children().len(), 1);
-        let removed_sub_tree = sub_tree.remove_from_tree();
-        removed_sub_tree.root_node().remove_from_tree();
+        let removed_sub_tree = sub_tree.remove_from_tree()?;
+        removed_sub_tree.root_node().remove_from_tree()?;
         assert_eq!(tree.root_node().as_node().unwrap().children().len(), 0);
+        Ok(())
     }
 }
