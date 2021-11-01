@@ -100,10 +100,12 @@ mod tests {
         let sub_sub_tree = sub_tree.as_node().unwrap().push_child(Value::Leaf(45));
         assert!(sub_sub_tree.parent().is_some());
         assert_eq!(sub_tree.as_node().unwrap().children().len(), 1);
-        sub_sub_tree.remove_from_tree();
+        let removed_sub_sub_tree = sub_sub_tree.remove_from_tree();
+        removed_sub_sub_tree.root_node().remove_from_tree();
         assert_eq!(sub_tree.as_node().unwrap().children().len(), 0);
         assert_eq!(tree.root_node().as_node().unwrap().children().len(), 1);
-        sub_tree.remove_from_tree();
+        let removed_sub_tree = sub_tree.remove_from_tree();
+        removed_sub_tree.root_node().remove_from_tree();
         assert_eq!(tree.root_node().as_node().unwrap().children().len(), 0);
     }
 }

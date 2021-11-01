@@ -34,7 +34,7 @@ impl<IT, LT> Leaf<IT, LT> {
         let parent = self.leaf.borrow_mut().parent.take();
         match &parent {
             None => {
-                // Current leaf has no parent. Nothing to do here
+                // The leaf has no parent already. Nothing to do here
             }
             Some(p) => {
                 match p.upgrade() {
