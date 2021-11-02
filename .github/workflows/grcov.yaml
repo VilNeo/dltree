@@ -19,5 +19,5 @@ jobs:
           echo "Downloading tarpaulin from $DOWNLOAD_URL"
           curl -L "$DOWNLOAD_URL" --output tarpaulin.tgz
           tar xzf tarpaulin.tgz
-          ./cargo-tarpaulin --out Xml
+          ./cargo-tarpaulin tarpaulin --out Xml
           bash <(curl -s https://codecov.io/bash) -X gcov -t $CODECOV_TOKEN
