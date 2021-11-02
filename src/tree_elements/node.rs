@@ -97,3 +97,23 @@ impl<IT, LT> Node<IT, LT> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn check_integrity_violation() {
+        let mut parent_node = Rc::new(RefCell::new(NodeImpl::new(21, None)));
+        let mut child_node = Node::<i32, i32> {
+            node: Rc::new(RefCell::new(NodeImpl::new(
+                32,
+                Some(Rc::downgrade(&parent_node)),
+            ))),
+        };
+        parent_node = Rc::new(RefCell::new(NodeImpl::new(43, None)));
+        assert!(child_node.parent().is_err());
+        assert!(child_node.remove_from_tree().is_err());
+        assert_eq!(parent_node.borrow().value, 43);
+    }
+}

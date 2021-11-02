@@ -74,3 +74,24 @@ impl<IT, LT> Leaf<IT, LT> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::internal::node_impl::NodeImpl;
+
+    #[test]
+    fn check_integrity_violation() {
+        let mut parent_node = Rc::new(RefCell::new(NodeImpl::new(21, None)));
+        let mut leaf = Leaf::<i32, i32> {
+            leaf: Rc::new(RefCell::new(LeafImpl::new(
+                32,
+                Some(Rc::downgrade(&parent_node)),
+            ))),
+        };
+        parent_node = Rc::new(RefCell::new(NodeImpl::new(43, None)));
+        assert!(leaf.parent().is_err());
+        assert!(leaf.remove_from_tree().is_err());
+        assert_eq!(parent_node.borrow().value, 43);
+    }
+}
