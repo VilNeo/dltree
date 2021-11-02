@@ -3,8 +3,9 @@ use crate::tree_elements::tree_element::TreeElement;
 
 #[derive(Debug)]
 pub enum DLTreeError {
-    ParentAlreadyInUse,
-    Other(String),
+    // This error should never happen and is a bug in dltree
+    // Please report any occurence of this error
+    DoubleLinkIntegrityViolated,
 }
 
 pub enum Value<IT, LT> {

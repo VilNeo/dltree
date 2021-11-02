@@ -61,7 +61,13 @@ impl<IT, LT> Node<IT, LT> {
                 })
             }
             Some(p) => match p.upgrade() {
-                None => return Err(DLTreeError::ParentAlreadyInUse),
+                None => {
+                    // Not being able to upgrade the weak pointer to parent can only have one cause:
+                    // This node has been removed from parent node but the weak pointer to the
+                    // parrent node has not been set to 'None'
+                    // This should never happen.
+                    return Err(DLTreeError::DoubleLinkIntegrityViolated);
+                }
                 Some(upgraded_p) => upgraded_p,
             },
         };
@@ -79,7 +85,13 @@ impl<IT, LT> Node<IT, LT> {
         match &self.node.borrow().parent {
             None => Ok(None),
             Some(p) => match p.upgrade() {
-                None => Err(DLTreeError::ParentAlreadyInUse),
+                None => {
+                    // Not being able to upgrade the weak pointer to parent can only have one cause:
+                    // This node has been removed from parent node but the weak pointer to the
+                    // parrent node has not been set to 'None'
+                    // This should never happen.
+                    Err(DLTreeError::DoubleLinkIntegrityViolated)
+                }
                 Some(upgraded_p) => Ok(Some(Node::new(upgraded_p))),
             },
         }
