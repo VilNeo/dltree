@@ -15,7 +15,9 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: |
-          curl -L `curl -s 'https://api.github.com/repos/xd009642/tarpaulin/releases/latest' | jq -r '.assets[0].browser_download_url'` --output tarpaulin.tgz
+          DOWNLOAD_URL=`curl -s 'https://api.github.com/repos/xd009642/tarpaulin/releases/latest' | jq -r '.assets[0].browser_download_url'`
+          echo "Downloading tarpaulin from $DOWNLOAD_URL"
+          curl -L "$DOWNLOAD_URL" --output tarpaulin.tgz
           tar xzf tarpaulin.tgz
           ./cargo-tarpaulin --out Xml
           bash <(curl -s https://codecov.io/bash) -X gcov -t $CODECOV_TOKEN
