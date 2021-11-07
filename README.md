@@ -7,7 +7,7 @@
 
 ## About
 
-***dltree* is a library that provides a double linked tree with leaf-considering typing.**
+***dltree* is a library that provides a doubly linked tree with leaf-considering typing.**
 
 ## Current state
 
@@ -16,7 +16,9 @@ Several future changes will be implemented until the first stable version 1.0:
 
  - [ ] Add documentation to all public structures and methods
  - [x] Remove all panicking elements and return Result<T,E> instead
- - [ ] Add missing methods like insertion of children (in addition to just pushing)
+   - Inserting and removing elements may panic. This will only happen if the tree integrity is violated.
+     This is a library bug and therefore a panic is appropriate here.
+ - [x] Add missing methods like insertion of children (in addition to just pushing)
  - [ ] Reevaluate the mutability of all methods
  - [ ] Add concise documentation how to use ***dltree*** in README.md
 

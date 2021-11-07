@@ -18,3 +18,12 @@ impl<IT, LT> TreeElementImpl<IT, LT> {
         }
     }
 }
+
+impl<IT, LT> Clone for TreeElementImpl<IT, LT> {
+    fn clone(&self) -> Self {
+        match &self {
+            TreeElementImpl::Node(n) => TreeElementImpl::Node(n.clone()),
+            TreeElementImpl::Leaf(l) => TreeElementImpl::Leaf(l.clone()),
+        }
+    }
+}

@@ -53,7 +53,7 @@ impl<IT, LT, T: TreeElementTrait<IT, LT>> TreeElementType<IT, LT, T> {
             .iter()
             .enumerate()
             .find(|(_, child)| self.is_same(child))
-            .ok_or(DLTreeError::DoubleLinkIntegrityViolated)?
+            .ok_or(DLTreeError::IntegrityViolated)?
             .0;
         return update_fn(
             index,
@@ -71,13 +71,64 @@ impl<IT, LT, T: TreeElementTrait<IT, LT>> TreeElementType<IT, LT, T> {
                     // This node has been removed from parent node but the weak pointer to the
                     // parrent node has not been set to 'None'
                     // This should never happen.
-                    Err(DLTreeError::DoubleLinkIntegrityViolated)
+                    Err(DLTreeError::IntegrityViolated)
                 }
                 Some(upgraded_p) => Ok(Some(TreeElementType::new(upgraded_p))),
             },
         }
     }
-    pub fn clone(&self) -> Self {
+    pub fn set(&mut self, value: Value<IT, LT>) -> Result<TreeElement<IT, LT>, DLTreeError> {
+        self.update_as_child(|index, children, parent| {
+            let child = children
+                .get_mut(index)
+                .ok_or(DLTreeError::IntegrityViolated)?;
+            match value {
+                Value::Node(n) => {
+                    let node = Rc::new(RefCell::new(NodeImpl::new(n, Some(parent))));
+                    *child = TreeElementImpl::Node(node.clone());
+                    Ok(TreeElement::new(child))
+                }
+                Value::Leaf(l) => {
+                    let leaf = Rc::new(RefCell::new(LeafImpl::new(l, Some(parent))));
+                    *child = TreeElementImpl::Leaf(leaf.clone());
+                    Ok(TreeElement::new(child))
+                }
+            }
+        })
+    }
+
+    pub fn insert_before(&mut self, value: Value<IT, LT>) -> Result<Tree<IT, LT>, DLTreeError> {
+        let inserted = self.update_as_child(|index, children, parent| {
+            let new_element = TreeElementImpl::new(value, Some(parent));
+            children.insert(index, new_element.clone());
+            Ok(new_element)
+        })?;
+        Ok(Tree { tree: inserted })
+    }
+
+    pub fn insert_after(&mut self, value: Value<IT, LT>) -> Result<Tree<IT, LT>, DLTreeError> {
+        let inserted = self.update_as_child(|index, children, parent| {
+            let new_element = TreeElementImpl::new(value, Some(parent));
+            children.insert(index + 1, new_element.clone());
+            Ok(new_element)
+        })?;
+        Ok(Tree { tree: inserted })
+    }
+
+    pub fn remove_from_tree(&mut self) -> Result<Tree<IT, LT>, DLTreeError> {
+        let removed_child = self.update_as_child(|index, children, _| {
+            let removed_child = children.remove(index);
+            *self.leaf.borrow_mut().parent() = None;
+            Ok(removed_child)
+        })?;
+        Ok(Tree {
+            tree: removed_child,
+        })
+    }
+}
+
+impl<IT, LT, T: TreeElementTrait<IT, LT>> Clone for TreeElementType<IT, LT, T> {
+    fn clone(&self) -> Self {
         TreeElementType::new(self.leaf.clone())
     }
 }
@@ -89,28 +140,6 @@ impl<IT, LT, T: TreeElementTrait<IT, LT>> PartialEq for TreeElementType<IT, LT, 
 }
 
 impl<IT, LT> Leaf<IT, LT> {
-    pub fn remove_from_tree(&mut self) -> Result<Tree<IT, LT>, DLTreeError> {
-        self.update_as_child(|index, children, _| {
-            children.remove(index);
-            *self.leaf.borrow_mut().parent() = None;
-            Ok(())
-        })?;
-        Ok(Tree {
-            tree: TreeElementImpl::Leaf(self.leaf.clone()),
-        })
-    }
-
-    pub fn replace_with_node(&mut self, node_value: IT) -> Result<Node<IT, LT>, DLTreeError> {
-        self.update_as_child(|index, children, parent| {
-            let child = children
-                .get_mut(index)
-                .ok_or(DLTreeError::DoubleLinkIntegrityViolated)?;
-            let node = Rc::new(RefCell::new(NodeImpl::new(node_value, Some(parent))));
-            *child = TreeElementImpl::Node(node.clone());
-            Ok(Node::new(node))
-        })
-    }
-
     pub fn value(&self) -> Ref<LT> {
         Ref::map(self.leaf.borrow(), |l| &l.value)
     }
@@ -121,16 +150,6 @@ impl<IT, LT> Leaf<IT, LT> {
 }
 
 impl<IT, LT> Node<IT, LT> {
-    pub fn remove_from_tree(&mut self) -> Result<Tree<IT, LT>, DLTreeError> {
-        self.update_as_child(|index, children, _| {
-            children.remove(index);
-            *self.leaf.borrow_mut().parent() = None;
-            Ok(())
-        })?;
-        Ok(Tree {
-            tree: TreeElementImpl::Node(self.leaf.clone()),
-        })
-    }
     pub fn push_child(&mut self, value: Value<IT, LT>) -> TreeElement<IT, LT> {
         let new_child = TreeElementImpl::new(value, Some(Rc::downgrade(&self.leaf)));
         let result = TreeElement::new(&new_child);
@@ -144,17 +163,6 @@ impl<IT, LT> Node<IT, LT> {
             .iter()
             .map(|c| TreeElement::new(c))
             .collect()
-    }
-
-    pub fn replace_with_leaf(&mut self, leaf_value: LT) -> Result<Leaf<IT, LT>, DLTreeError> {
-        self.update_as_child(|index, children, parent| {
-            let child = children
-                .get_mut(index)
-                .ok_or(DLTreeError::DoubleLinkIntegrityViolated)?;
-            let leaf = Rc::new(RefCell::new(LeafImpl::new(leaf_value, Some(parent))));
-            *child = TreeElementImpl::Leaf(leaf.clone());
-            Ok(Leaf::new(leaf))
-        })
     }
 
     pub fn value(&self) -> Ref<IT> {

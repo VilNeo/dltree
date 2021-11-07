@@ -5,7 +5,7 @@ use crate::tree_elements::tree_element::TreeElement;
 pub enum DLTreeError {
     // This error should never happen and is a bug in dltree
     // Please report any occurence of this error
-    DoubleLinkIntegrityViolated,
+    IntegrityViolated,
     // This error happens if child manipulations like insertions or replacements are applied on the root element
     ChildOperationOnRootLevel,
 }
@@ -128,10 +128,61 @@ mod tests {
             .as_node()
             .unwrap()
             .push_child(Value::Leaf(45));
-        let mut node = leaf.as_leaf().unwrap().replace_with_node(56)?;
+        let mut node = leaf
+            .as_leaf()
+            .unwrap()
+            .set(Value::Node(56))?
+            .as_node()
+            .unwrap();
         node.push_child(Value::Leaf(67));
-        let sub_leaf = node.replace_with_leaf(78)?;
+        let sub_leaf = node.set(Value::Leaf(78))?.as_leaf().unwrap();
         assert_eq!(*sub_leaf.parent()?.unwrap().value(), 34);
+        Ok(())
+    }
+    #[test]
+    fn insert_test() -> Result<(), DLTreeError> {
+        let tree = Tree::<i32, i32>::new(Value::Node(11));
+        tree.root_node()
+            .as_node()
+            .unwrap()
+            .push_child(Value::Leaf(21));
+        let middle_leaf = tree
+            .root_node()
+            .as_node()
+            .unwrap()
+            .push_child(Value::Leaf(22));
+        tree.root_node()
+            .as_node()
+            .unwrap()
+            .push_child(Value::Leaf(23));
+        assert_eq!(
+            tree.root_node()
+                .as_node()
+                .unwrap()
+                .children()
+                .iter()
+                .map(|c| *c.value())
+                .collect::<Vec<i32>>(),
+            vec![21, 22, 23]
+        );
+        middle_leaf
+            .as_leaf()
+            .unwrap()
+            .insert_before(Value::Leaf(44))?;
+        middle_leaf
+            .as_leaf()
+            .unwrap()
+            .insert_after(Value::Node(45))?;
+        assert_eq!(
+            tree.root_node()
+                .as_node()
+                .unwrap()
+                .children()
+                .iter()
+                .map(|c| *c.value())
+                .collect::<Vec<i32>>(),
+            vec![21, 44, 22, 45, 23]
+        );
         Ok(())
     }
 }

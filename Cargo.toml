@@ -1,12 +1,12 @@
 [package]
 name = "dltree"
-version = "0.1.4"
+version = "0.1.5"
 authors = ["Alexander Huymayer"]
 edition = "2018"
-description = "Double linked tree with leaf-considering typing"
+description = "Doubly linked tree with leaf-considering typing"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/VilNeo/dltree"
-keywords = ["tree", "data-structure", "double-linked"]
+keywords = ["tree", "data-structure", "doubly-linked"]
 
 [dependencies]
