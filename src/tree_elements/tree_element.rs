@@ -1,6 +1,6 @@
-use super::{leaf::Leaf, node::Node};
 use crate::internal::tree_element_impl::TreeElementImpl;
 use crate::tree::{DLTreeError, Tree};
+use crate::tree_elements::tree_element_type::{Leaf, Node};
 use std::cell::{Ref, RefMut};
 
 pub enum TreeElement<IT, LT> {

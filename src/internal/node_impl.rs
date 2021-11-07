@@ -1,4 +1,5 @@
 use super::tree_element_impl::TreeElementImpl;
+use crate::internal::TreeElementTrait;
 use std::cell::RefCell;
 use std::rc::Weak;
 
@@ -16,5 +17,11 @@ impl<IT, LT> NodeImpl<IT, LT> {
             value,
             children: vec![],
         }
+    }
+}
+
+impl<IT, LT> TreeElementTrait<IT, LT> for NodeImpl<IT, LT> {
+    fn parent(&mut self) -> &mut Option<Weak<RefCell<NodeImpl<IT, LT>>>> {
+        &mut self.parent
     }
 }

@@ -6,6 +6,8 @@ pub enum DLTreeError {
     // This error should never happen and is a bug in dltree
     // Please report any occurence of this error
     DoubleLinkIntegrityViolated,
+    // This error happens if child manipulations like insertions or replacements are applied on the root element
+    ChildOperationOnRootLevel,
 }
 
 pub enum Value<IT, LT> {
@@ -109,12 +111,27 @@ mod tests {
         assert!(sub_sub_tree.parent()?.is_some());
         assert_eq!(sub_tree.as_node().unwrap().children().len(), 1);
         let removed_sub_sub_tree = sub_sub_tree.remove_from_tree()?;
-        removed_sub_sub_tree.root_node().remove_from_tree()?;
+        assert!(removed_sub_sub_tree.root_node().remove_from_tree().is_err());
         assert_eq!(sub_tree.as_node().unwrap().children().len(), 0);
         assert_eq!(tree.root_node().as_node().unwrap().children().len(), 1);
         let removed_sub_tree = sub_tree.remove_from_tree()?;
-        removed_sub_tree.root_node().remove_from_tree()?;
+        assert!(removed_sub_tree.root_node().remove_from_tree().is_err());
         assert_eq!(tree.root_node().as_node().unwrap().children().len(), 0);
+        Ok(())
+    }
+
+    #[test]
+    fn replace_test() -> Result<(), DLTreeError> {
+        let tree = Tree::<i32, i32>::new(Value::Node(34));
+        let leaf = tree
+            .root_node()
+            .as_node()
+            .unwrap()
+            .push_child(Value::Leaf(45));
+        let mut node = leaf.as_leaf().unwrap().replace_with_node(56)?;
+        node.push_child(Value::Leaf(67));
+        let sub_leaf = node.replace_with_leaf(78)?;
+        assert_eq!(*sub_leaf.parent()?.unwrap().value(), 34);
         Ok(())
     }
 }
