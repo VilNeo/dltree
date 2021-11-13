@@ -39,13 +39,13 @@ mod tests {
     fn tree_building_test() {
         let tree = Tree::new(Value::Node(23));
         assert!(tree.root_node().as_leaf().is_none());
-        let mut node = tree.root_node().as_node().unwrap();
+        let mut node = tree.root_node().clone().as_node().unwrap();
         assert_eq!(*node.value(), 23);
 
         let pushed_element = node.push_child(Value::Leaf(34));
         assert!(pushed_element.as_node().is_none());
 
-        let leaf = pushed_element.as_leaf().unwrap();
+        let leaf = pushed_element.clone().as_leaf().unwrap();
         assert_eq!(*leaf.value(), 34);
         assert_eq!(node.children().len(), 1);
     }
@@ -123,20 +123,59 @@ mod tests {
     #[test]
     fn replace_test() -> Result<(), DLTreeError> {
         let tree = Tree::<i32, i32>::new(Value::Node(34));
+        let mut leaf = tree
+            .root_node()
+            .as_node()
+            .unwrap()
+            .push_child(Value::Leaf(45));
+        let mut node = leaf.set(Value::Node(56))?;
+        node.as_node().unwrap().push_child(Value::Leaf(67));
+        let sub_leaf = node.set(Value::Leaf(78))?.as_leaf().unwrap();
+        assert_eq!(*sub_leaf.parent()?.unwrap().value(), 34);
+        Ok(())
+    }
+    #[test]
+    fn replace_leaf_test() -> Result<(), DLTreeError> {
+        let tree = Tree::<i32, i32>::new(Value::Node(34));
+        let mut leaf = tree
+            .root_node()
+            .as_node()
+            .unwrap()
+            .push_child(Value::Leaf(45));
+        let mut leaf2 = tree
+            .root_node()
+            .as_node()
+            .unwrap()
+            .push_child(Value::Leaf(46));
+        let mut node = leaf.set(Value::Node(56))?;
+        node.as_node().unwrap().push_child(Value::Leaf(67));
+        let sub_leaf = node.set_leaf(78)?;
+        assert_eq!(*sub_leaf.parent()?.unwrap().value(), 34);
+
+        let replaced_leaf2 = leaf2.set_leaf(146)?;
+        assert_eq!(*replaced_leaf2.parent()?.unwrap().value(), 34);
+        Ok(())
+    }
+    #[test]
+    fn replace_node_test() -> Result<(), DLTreeError> {
+        let tree = Tree::<i32, i32>::new(Value::Node(34));
         let leaf = tree
             .root_node()
             .as_node()
             .unwrap()
             .push_child(Value::Leaf(45));
-        let mut node = leaf
-            .as_leaf()
-            .unwrap()
-            .set(Value::Node(56))?
+        let mut leaf2 = tree
+            .root_node()
             .as_node()
-            .unwrap();
-        node.push_child(Value::Leaf(67));
-        let sub_leaf = node.set(Value::Leaf(78))?.as_leaf().unwrap();
-        assert_eq!(*sub_leaf.parent()?.unwrap().value(), 34);
+            .unwrap()
+            .push_child(Value::Leaf(46));
+        let mut node = leaf.as_leaf().unwrap().set(Value::Node(56))?;
+        node.as_node().unwrap().push_child(Value::Leaf(67));
+        let sub_node = node.set_node(78)?;
+        assert_eq!(*sub_node.parent()?.unwrap().value(), 34);
+
+        let replaced_leaf2 = leaf2.set_node(146)?;
+        assert_eq!(*replaced_leaf2.parent()?.unwrap().value(), 34);
         Ok(())
     }
     #[test]
@@ -182,6 +221,28 @@ mod tests {
                 .map(|c| *c.value())
                 .collect::<Vec<i32>>(),
             vec![21, 44, 22, 45, 23]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn remove_all_children_test() -> Result<(), DLTreeError> {
+        let tree = Tree::new(Value::Node(23));
+        let mut root_node = tree.root_node().as_node().unwrap();
+        root_node.push_child(Value::Leaf(1));
+        root_node.push_child(Value::Node(2));
+        root_node.push_child(Value::Leaf(3));
+        root_node.push_child(Value::Node(4));
+        assert_eq!(root_node.children().len(), 4);
+        let children = root_node.children();
+        root_node.remove_all_children()?;
+        assert_eq!(root_node.children().len(), 0);
+        assert_eq!(
+            children
+                .iter()
+                .filter(|c| c.parent().unwrap().is_none())
+                .count(),
+            4
         );
         Ok(())
     }

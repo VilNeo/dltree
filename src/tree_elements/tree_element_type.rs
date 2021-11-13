@@ -97,6 +97,36 @@ impl<IT, LT, T: TreeElementTrait<IT, LT>> TreeElementType<IT, LT, T> {
         })
     }
 
+    pub fn set_leaf(&mut self, value: LT) -> Result<Leaf<IT, LT>, DLTreeError> {
+        self.update_as_child(|index, children, parent| {
+            let child = children
+                .get_mut(index)
+                .ok_or(DLTreeError::IntegrityViolated)?;
+            let leaf = Rc::new(RefCell::new(LeafImpl::new(value, Some(parent))));
+            *child = TreeElementImpl::Leaf(leaf.clone());
+            Ok(Leaf {
+                leaf,
+                phantom_it: Default::default(),
+                phantom_lt: Default::default(),
+            })
+        })
+    }
+
+    pub fn set_node(&mut self, value: IT) -> Result<Node<IT, LT>, DLTreeError> {
+        self.update_as_child(|index, children, parent| {
+            let child = children
+                .get_mut(index)
+                .ok_or(DLTreeError::IntegrityViolated)?;
+            let node = Rc::new(RefCell::new(NodeImpl::new(value, Some(parent))));
+            *child = TreeElementImpl::Node(node.clone());
+            Ok(Node {
+                leaf: node,
+                phantom_it: Default::default(),
+                phantom_lt: Default::default(),
+            })
+        })
+    }
+
     pub fn insert_before(&mut self, value: Value<IT, LT>) -> Result<Tree<IT, LT>, DLTreeError> {
         let inserted = self.update_as_child(|index, children, parent| {
             let new_element = TreeElementImpl::new(value, Some(parent));
@@ -155,6 +185,18 @@ impl<IT, LT> Node<IT, LT> {
         let result = TreeElement::new(&new_child);
         self.leaf.borrow_mut().children.push(new_child);
         result
+    }
+    pub fn remove_all_children(&mut self) -> Result<(), DLTreeError> {
+        let mut removed_children = vec![];
+        while let Some(mut child) = self.leaf.borrow_mut().children.pop() {
+            match &mut child {
+                TreeElementImpl::Node(n) => n.borrow_mut().parent = None,
+                TreeElementImpl::Leaf(l) => l.borrow_mut().parent = None,
+            }
+            removed_children.push(child);
+        }
+        assert!(self.leaf.borrow_mut().children.is_empty());
+        Ok(())
     }
     pub fn children(&self) -> Vec<TreeElement<IT, LT>> {
         self.leaf
