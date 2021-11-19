@@ -186,6 +186,21 @@ impl<IT, LT> Node<IT, LT> {
         self.leaf.borrow_mut().children.push(new_child);
         result
     }
+    pub fn push_child_tree(&mut self, subtree: TreeElement<IT, LT>) -> TreeElement<IT, LT> {
+        let new_child = match subtree {
+            TreeElement::Node(n) => {
+                n.leaf.borrow_mut().parent = Some(Rc::downgrade(&self.leaf));
+                TreeElementImpl::Node(n.leaf)
+            }
+            TreeElement::Leaf(l) => {
+                l.leaf.borrow_mut().parent = Some(Rc::downgrade(&self.leaf));
+                TreeElementImpl::Leaf(l.leaf)
+            }
+        };
+        let result = TreeElement::new(&new_child);
+        self.leaf.borrow_mut().children.push(new_child);
+        result
+    }
     pub fn remove_all_children(&mut self) -> Result<(), DLTreeError> {
         let mut removed_children = vec![];
         while let Some(mut child) = self.leaf.borrow_mut().children.pop() {
