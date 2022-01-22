@@ -1,6 +1,7 @@
 use crate::internal::tree_element_impl::TreeElementImpl;
 use crate::tree::{DLTreeError, Tree, Value};
 use crate::tree_elements::tree_element_type::{Leaf, Node};
+use crate::DeepClone;
 use std::cell::{Ref, RefMut};
 
 #[derive(Debug)]
@@ -65,6 +66,15 @@ impl<IT, LT> Clone for TreeElement<IT, LT> {
         match &self {
             TreeElement::Node(n) => TreeElement::Node(n.clone()),
             TreeElement::Leaf(l) => TreeElement::Leaf(l.clone()),
+        }
+    }
+}
+
+impl<IT: Clone, LT: Clone> DeepClone for TreeElement<IT, LT> {
+    fn deep_clone(&self) -> Self {
+        match self {
+            TreeElement::Node(n) => TreeElement::Node(n.deep_clone()),
+            TreeElement::Leaf(l) => TreeElement::Leaf(l.deep_clone()),
         }
     }
 }

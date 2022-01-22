@@ -17,6 +17,12 @@ impl<IT, LT> TreeElementImpl<IT, LT> {
             Value::Leaf(l) => Self::Leaf(Rc::new(RefCell::new(LeafImpl::new(l, parent)))),
         }
     }
+    pub(crate) fn update_parent(&mut self, parent: Option<Weak<RefCell<NodeImpl<IT, LT>>>>) {
+        match self {
+            TreeElementImpl::Node(n) => n.borrow_mut().parent = parent,
+            TreeElementImpl::Leaf(l) => l.borrow_mut().parent = parent,
+        }
+    }
 }
 
 impl<IT, LT> Clone for TreeElementImpl<IT, LT> {
@@ -24,6 +30,25 @@ impl<IT, LT> Clone for TreeElementImpl<IT, LT> {
         match &self {
             TreeElementImpl::Node(n) => TreeElementImpl::Node(n.clone()),
             TreeElementImpl::Leaf(l) => TreeElementImpl::Leaf(l.clone()),
+        }
+    }
+}
+
+impl<IT: Clone, LT: Clone> crate::DeepClone for TreeElementImpl<IT, LT> {
+    fn deep_clone(&self) -> Self {
+        match &self {
+            TreeElementImpl::Node(n) => {
+                let new_node = Rc::new(RefCell::new(n.borrow().deep_clone()));
+                new_node
+                    .borrow_mut()
+                    .children
+                    .iter_mut()
+                    .for_each(|c| c.update_parent(Some(Rc::downgrade(&new_node))));
+                TreeElementImpl::Node(new_node)
+            }
+            TreeElementImpl::Leaf(l) => {
+                TreeElementImpl::Leaf(Rc::new(RefCell::new(l.borrow().clone())))
+            }
         }
     }
 }

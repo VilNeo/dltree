@@ -20,3 +20,12 @@ impl<IT, LT> TreeElementTrait<IT, LT> for LeafImpl<IT, LT> {
         &mut self.parent
     }
 }
+
+impl<IT: Clone, LT: Clone> Clone for LeafImpl<IT, LT> {
+    fn clone(&self) -> Self {
+        LeafImpl {
+            parent: None,
+            value: self.value.clone(),
+        }
+    }
+}

@@ -33,6 +33,7 @@ impl<IT, LT> Tree<IT, LT> {
 #[cfg(test)]
 mod tests {
     use crate::tree::{DLTreeError, Tree, Value};
+    use crate::DeepClone;
     use std::borrow::BorrowMut;
 
     #[test]
@@ -42,7 +43,7 @@ mod tests {
         let mut node = tree.root_node().clone().as_node().unwrap();
         assert_eq!(*node.value(), 23);
 
-        let pushed_element = node.push_child(Value::Leaf(34));
+        let pushed_element = node.push_back_child(Value::Leaf(34));
         assert!(pushed_element.as_node().is_none());
 
         let leaf = pushed_element.clone().as_leaf().unwrap();
@@ -62,16 +63,16 @@ mod tests {
     }
 
     #[test]
-    fn element_rempval_test() -> Result<(), DLTreeError> {
+    fn element_removal_test() -> Result<(), DLTreeError> {
         let tree = Tree::new(Value::Node(11));
         let mut node11 = tree.root_node().as_node().unwrap();
-        let mut node21 = node11.push_child(Value::Node(21)).as_node().unwrap();
+        let mut node21 = node11.push_back_child(Value::Node(21)).as_node().unwrap();
         assert_eq!(node11, node21.parent()?.unwrap());
-        let mut _node31 = node21.push_child(Value::Node(31)).as_node().unwrap();
-        let mut node32 = node21.push_child(Value::Node(32)).as_node().unwrap();
-        let mut _node33 = node21.push_child(Value::Node(33)).as_node().unwrap();
-        let mut leaf34 = node21.push_child(Value::Leaf(34)).as_leaf().unwrap();
-        let mut leaf_41 = node32.push_child(Value::Leaf(41)).as_leaf().unwrap();
+        let mut _node31 = node21.push_back_child(Value::Node(31)).as_node().unwrap();
+        let mut node32 = node21.push_back_child(Value::Node(32)).as_node().unwrap();
+        let mut _node33 = node21.push_back_child(Value::Node(33)).as_node().unwrap();
+        let mut leaf34 = node21.push_back_child(Value::Leaf(34)).as_leaf().unwrap();
+        let mut leaf_41 = node32.push_back_child(Value::Leaf(41)).as_leaf().unwrap();
         assert_eq!(leaf_41.parent()?.unwrap(), node32);
 
         let removed_node_32 = node32.remove_from_tree()?;
@@ -105,9 +106,9 @@ mod tests {
         let tree = Tree::new(Value::Node(23));
         assert!(tree.root_node().parent()?.is_none());
         let mut node = tree.root_node().as_node().unwrap();
-        let mut sub_tree = node.push_child(Value::Node(34));
+        let mut sub_tree = node.push_back_child(Value::Node(34));
         assert!(sub_tree.parent()?.is_some());
-        let mut sub_sub_tree = sub_tree.as_node().unwrap().push_child(Value::Leaf(45));
+        let mut sub_sub_tree = sub_tree.as_node().unwrap().push_back_child(Value::Leaf(45));
         assert!(sub_sub_tree.parent()?.is_some());
         assert_eq!(sub_tree.as_node().unwrap().children().len(), 1);
         let removed_sub_sub_tree = sub_sub_tree.remove_from_tree()?;
@@ -127,9 +128,9 @@ mod tests {
             .root_node()
             .as_node()
             .unwrap()
-            .push_child(Value::Leaf(45));
+            .push_back_child(Value::Leaf(45));
         let mut node = leaf.set(Value::Node(56))?;
-        node.as_node().unwrap().push_child(Value::Leaf(67));
+        node.as_node().unwrap().push_back_child(Value::Leaf(67));
         let sub_leaf = node.set(Value::Leaf(78))?.as_leaf().unwrap();
         assert_eq!(*sub_leaf.parent()?.unwrap().value(), 34);
         Ok(())
@@ -141,14 +142,14 @@ mod tests {
             .root_node()
             .as_node()
             .unwrap()
-            .push_child(Value::Leaf(45));
+            .push_back_child(Value::Leaf(45));
         let mut leaf2 = tree
             .root_node()
             .as_node()
             .unwrap()
-            .push_child(Value::Leaf(46));
+            .push_back_child(Value::Leaf(46));
         let mut node = leaf.set(Value::Node(56))?;
-        node.as_node().unwrap().push_child(Value::Leaf(67));
+        node.as_node().unwrap().push_back_child(Value::Leaf(67));
         let sub_leaf = node.set_leaf(78)?;
         assert_eq!(*sub_leaf.parent()?.unwrap().value(), 34);
 
@@ -163,14 +164,14 @@ mod tests {
             .root_node()
             .as_node()
             .unwrap()
-            .push_child(Value::Leaf(45));
+            .push_back_child(Value::Leaf(45));
         let mut leaf2 = tree
             .root_node()
             .as_node()
             .unwrap()
-            .push_child(Value::Leaf(46));
+            .push_back_child(Value::Leaf(46));
         let mut node = leaf.as_leaf().unwrap().set(Value::Node(56))?;
-        node.as_node().unwrap().push_child(Value::Leaf(67));
+        node.as_node().unwrap().push_back_child(Value::Leaf(67));
         let sub_node = node.set_node(78)?;
         assert_eq!(*sub_node.parent()?.unwrap().value(), 34);
 
@@ -184,16 +185,16 @@ mod tests {
         tree.root_node()
             .as_node()
             .unwrap()
-            .push_child(Value::Leaf(21));
+            .push_back_child(Value::Leaf(21));
         let middle_leaf = tree
             .root_node()
             .as_node()
             .unwrap()
-            .push_child(Value::Leaf(22));
+            .push_back_child(Value::Leaf(22));
         tree.root_node()
             .as_node()
             .unwrap()
-            .push_child(Value::Leaf(23));
+            .push_back_child(Value::Leaf(23));
         assert_eq!(
             tree.root_node()
                 .as_node()
@@ -229,10 +230,10 @@ mod tests {
     fn remove_all_children_test() -> Result<(), DLTreeError> {
         let tree = Tree::new(Value::Node(23));
         let mut root_node = tree.root_node().as_node().unwrap();
-        root_node.push_child(Value::Leaf(1));
-        root_node.push_child(Value::Node(2));
-        root_node.push_child(Value::Leaf(3));
-        root_node.push_child(Value::Node(4));
+        root_node.push_back_child(Value::Leaf(1));
+        root_node.push_back_child(Value::Node(2));
+        root_node.push_back_child(Value::Leaf(3));
+        root_node.push_back_child(Value::Node(4));
         assert_eq!(root_node.children().len(), 4);
         let children = root_node.children();
         root_node.remove_all_children()?;
@@ -244,6 +245,81 @@ mod tests {
                 .count(),
             4
         );
+        Ok(())
+    }
+
+    #[test]
+    fn deep_clone_test() -> Result<(), DLTreeError> {
+        // Create a new tree with three levels under the root node
+        // Clone a subtree under the root node
+        // Set new values in the cloned tree
+        // 1. Check integrity (all parents must be set properly)
+        // 2. Check for separateness (new cloned tree must not share any node with the original tree)
+
+        let tree = Tree::new(Value::Node(23));
+        let mut root_node = tree.root_node().clone().as_node().unwrap();
+
+        let _child_1a = root_node.push_back_child(Value::Leaf(11));
+        let mut child_1b = root_node
+            .push_back_child(Value::Node(12))
+            .as_node()
+            .unwrap();
+        let _child_1c = root_node.push_back_child(Value::Leaf(13));
+
+        let child_2a = child_1b.push_back_child(Value::Leaf(21));
+        let child_2b = child_1b.push_back_child(Value::Leaf(22));
+        let mut child_2c = child_1b.push_back_child(Value::Node(23)).as_node().unwrap();
+
+        let child_3a = child_2c.push_back_child(Value::Leaf(31));
+        let child_3b = child_2c.push_back_child(Value::Node(32));
+
+        let cloned_node = child_1b.deep_clone();
+        assert!(cloned_node.parent()?.is_none());
+        *cloned_node.value_mut() = 112;
+        assert_eq!(*child_1b.value(), 12);
+        assert_eq!(*cloned_node.value(), 112);
+
+        assert_eq!(cloned_node.children().len(), 3);
+        let cloned_child_2a = cloned_node.children().get(0).unwrap().as_leaf().unwrap();
+        let cloned_child_2b = cloned_node.children().get(1).unwrap().as_leaf().unwrap();
+        let cloned_child_2c = cloned_node.children().get(2).unwrap().as_node().unwrap();
+
+        *cloned_child_2a.value_mut() = 121;
+        *cloned_child_2b.value_mut() = 122;
+        *cloned_child_2c.value_mut() = 123;
+        assert_eq!(*child_2a.value(), 21);
+        assert_eq!(*child_2b.value(), 22);
+        assert_eq!(*child_2c.value(), 23);
+        assert_eq!(*cloned_child_2a.value(), 121);
+        assert_eq!(*cloned_child_2b.value(), 122);
+        assert_eq!(*cloned_child_2c.value(), 123);
+        assert_eq!(*cloned_child_2a.parent()?.unwrap().value(), 112);
+        assert_eq!(*cloned_child_2b.parent()?.unwrap().value(), 112);
+        assert_eq!(*cloned_child_2c.parent()?.unwrap().value(), 112);
+
+        assert_eq!(cloned_child_2c.children().len(), 2);
+        let cloned_child_3a = cloned_child_2c
+            .children()
+            .get(0)
+            .unwrap()
+            .as_leaf()
+            .unwrap();
+        let cloned_child_3b = cloned_child_2c
+            .children()
+            .get(1)
+            .unwrap()
+            .as_node()
+            .unwrap();
+
+        *cloned_child_3a.value_mut() = 131;
+        *cloned_child_3b.value_mut() = 132;
+        assert_eq!(*child_3a.value(), 31);
+        assert_eq!(*child_3b.value(), 32);
+        assert_eq!(*cloned_child_3a.value(), 131);
+        assert_eq!(*cloned_child_3b.value(), 132);
+        assert_eq!(*cloned_child_3a.parent()?.unwrap().value(), 123);
+        assert_eq!(*cloned_child_3b.parent()?.unwrap().value(), 123);
+
         Ok(())
     }
 }
